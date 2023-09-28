@@ -1,4 +1,5 @@
 using NLog.Web;
+using QuakeAnalyst.Analyzer;
 using QuakeAnalyst.ApiService;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -13,6 +14,7 @@ try
     builder.Services.AddControllersWithViews();
     builder.Services.AddHttpClient();
     builder.Services.AddSingleton<IEarthquakeApiService, OrhanAydogduApiHandler>();
+    builder.Services.AddSingleton<EarthquakeAnalyzer, EarthquakeAnalyzer>();
     //configure logging
     builder.Services.AddLogging(loggingBuilder =>
     {

@@ -47,7 +47,7 @@ namespace QuakeAnalyst.Controllers
                 var from = DateTime.Parse(fromDay);
                 var to = DateTime.Parse(toDay);
 
-                model.Earthquakes = await _apiHandler.GetEarthquakes(from, to);
+                model.Earthquakes = await _apiHandler.GetEarthquakes(new RequestEarthquakeFilter { FromDay = from, ToDay = to});
             }            
             return View(model);
         }

@@ -1,0 +1,78 @@
+﻿@{
+    ViewData["Title"] = "EarhtquakeAnalysis";
+}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<h1>EarhtquakeAnalysis</h1>
+<!Form id="daily-spread-form" >
+<label for="fromDay">From:</label>
+<input type="date" id="fromDay" name="fromDay">
+<label for="toDay">To:</label>
+<input type="date" id="toDay" name="toDay">
+</!Form>
+<button onclick="SubmitForDailySpread()">Submit</button>
+
+<div style="width: 800px;"><canvas id="canvas-chart"></canvas></div>
+<script>
+    let dailyMagnituteAvarages;
+    let chart_dailyAvarages;
+
+    const SubmitForDailySpread = async () => {
+        let form = document.getElementById('daily-spread-form')
+
+        const fromDay = document.getElementById('fromDay').value;
+        const toDay = document.getElementById('toDay').value;
+
+        const data = JSON.stringify({
+            fromDay,
+            toDay
+        });
+        let responseData;
+        try {
+            const response = await fetch('/EarthquakeAnalysis/MagnituteAvaragesOverDay', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: data
+            });
+
+            if (response.ok) {
+                responseData = await response.json();
+                console.log(responseData); // Handle the response data here
+            } else {
+                console.error('Request failed with status: ' + response.status);
+            }
+        } catch (error) {
+            console.error('An error occurred:', error);
+        }
+
+        
+        dailyMagnituteAvarages = []
+        for (let i = 0; i < responseData.length; i++) {
+            dailyMagnituteAvarages.push({ hour: i, magnitute: responseData[i] });
+        }
+        console.log(dailyMagnituteAvarages);
+        chart_dailyAvarages = await displayDailyMagAvarages(dailyMagnituteAvarages);
+    }
+
+    const displayDailyMagAvarages = async (data) => {
+        chart_dailyAvarages?.destroy();
+        return new Chart(
+            document.getElementById('canvas-chart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: data.map(row => row.hour),
+                    datasets: [
+                        {
+                            label: 'Acquisitions by year',
+                            data: data.map(row => row.magnitute)
+                        }
+                    ]
+                }
+            }
+        );
+    }
+
+</script>

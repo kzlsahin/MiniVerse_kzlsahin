@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using NLog;
+using QuakeAnalyst.MvcModels;
 using QuakeAnalyst.Repo;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
@@ -35,10 +36,14 @@ namespace QuakeAnalyst.ApiService
             return _geoLocations ?? new List<City>();
         }
 
-        public async Task<List<Earthquake>> GetEarthquakes(DateTime fromDate, DateTime toDate)
+        public async Task<List<Earthquake>> GetEarthquakes(RequestEarthquakeFilter filter)
         {
-            List<Earthquake> earthquakes = await QueryEarthquakeData(fromDate, toDate);
-            return earthquakes;
+            List<Earthquake> earthquakes = await QueryEarthquakeData(filter.FromDay, filter.ToDay);
+            if (earthquakes.Count == 0)
+                return earthquakes;
+            if (filter.MaxMagnitute == double.MaxValue && filter.MinMagnitute == 0)
+                return earthquakes;
+            return earthquakes.Where(x => x.Magnitude < filter.MaxMagnitute && x.Magnitude > filter.MinMagnitute).ToList();
         }
         private async Task<bool> QueryGeoLocations()
         {
@@ -72,10 +77,14 @@ namespace QuakeAnalyst.ApiService
         {
             return $"https://api.orhanaydogdu.com.tr/deprem/kandilli/archive?date={fromDate.Year}-{fromDate.Month:D2}-{fromDate.Day:D2}&date_end={toDate.Year}-{toDate.Month:D2}-{toDate.Day:D2}";
         }
-        private async Task<List<Earthquake>> QueryEarthquakeData(DateTime fromDate, DateTime toDate)
+        private async Task<List<Earthquake>> QueryEarthquakeData(DateTime? fromDate, DateTime? toDate)
         {
+            if(fromDate == null || toDate == null)
+            {
+                return new List<Earthquake>();
+            }
             HttpClient client = new HttpClient();
-            string query = EarthquakeQueryString(fromDate, toDate);
+            string query = EarthquakeQueryString((DateTime)fromDate, (DateTime)toDate);
             using HttpResponseMessage response = await client.GetAsync(query);
             response.EnsureSuccessStatusCode();
             string responseBody = await response.Content.ReadAsStringAsync();
