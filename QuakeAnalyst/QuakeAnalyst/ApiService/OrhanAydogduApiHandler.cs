@@ -73,9 +73,10 @@ namespace QuakeAnalyst.ApiService
            
         }
 
-        private string EarthquakeQueryString(DateTime fromDate, DateTime toDate)
+        private string EarthquakeQueryString(DateTime fromDate, DateTime toDate, int minMag = 4, int limit = int.MaxValue)
         {
-            return $"https://api.orhanaydogdu.com.tr/deprem/kandilli/archive?date={fromDate.Year}-{fromDate.Month:D2}-{fromDate.Day:D2}&date_end={toDate.Year}-{toDate.Month:D2}-{toDate.Day:D2}";
+
+            return $"https://api.orhanaydogdu.com.tr/deprem/kandilli/archive?skip={minMag}&limit={limit}&date={fromDate.Year}-{fromDate.Month:D2}-{fromDate.Day:D2}&date_end={toDate.Year}-{toDate.Month:D2}-{toDate.Day:D2}";
         }
         private async Task<List<Earthquake>> QueryEarthquakeData(DateTime? fromDate, DateTime? toDate)
         {

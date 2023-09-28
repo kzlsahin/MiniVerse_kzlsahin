@@ -43,5 +43,30 @@ namespace QuakeAnalyst.Analyzer
             }
             return magnitutes;
         }
+
+        public async Task<List<int>> CountAvaragesOverDay(RequestEarthquakeFilter filter)
+        {
+            List<int> counts = new();
+            List<Earthquake> earthquakes = new();
+            if (filter.FromDay != null && filter.ToDay != null)
+            {
+                earthquakes = await _apiHandler.GetEarthquakes(filter);
+                for (int i = 0; i < 24; i++)
+                {
+                    int count = earthquakes
+                        .Where(x => x.Date.Hour == i)
+                        .Count();
+                    counts.Add(count);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < 24; i++)
+                {
+                    counts.Add(0);
+                }
+            }
+            return counts;
+        }
     }
 }

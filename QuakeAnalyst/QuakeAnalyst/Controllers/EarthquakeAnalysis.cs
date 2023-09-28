@@ -22,7 +22,23 @@ namespace QuakeAnalyst.Controllers
         [HttpPost]
         public async Task<JsonResult> MagnituteAvaragesOverDay([FromBody] RequestEarthquakeFilter filter)
         {
+            if(filter is null)
+            {
+                throw new ArgumentNullException(nameof(filter));
+            }
+
             var magnitutes = await _analyzer.MagnituteAvaragesOverDay(filter);
+            return Json(magnitutes);
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> CountAvaragesOverDay([FromBody] RequestEarthquakeFilter filter)
+        {
+            if (filter is null)
+            {
+                throw new ArgumentNullException(nameof(filter));
+            }
+            var magnitutes = await _analyzer.CountAvaragesOverDay(filter);
             return Json(magnitutes);
         }
     }
