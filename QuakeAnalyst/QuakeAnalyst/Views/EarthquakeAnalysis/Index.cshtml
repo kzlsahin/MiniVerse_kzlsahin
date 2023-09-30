@@ -24,6 +24,7 @@
     let chart_dailyAvarages;
     let chart_dailyCountAvarages;
 
+    let earthquakesAnalysedCount;
     const SubmitForDailySpread = async () => {
         let form = document.getElementById('daily-spread-form')
 
@@ -56,8 +57,10 @@
 
         
         dailyMagnituteAvarages = []
-        for (let i = 0; i < responseData.length; i++) {
-            dailyMagnituteAvarages.push({ hour: i, magnitute: responseData[i] });
+        earthquakesAnalysedCount = responseData.earthquakeCounted;
+
+        for (let i = 0; i < responseData.content.length; i++) {
+            dailyMagnituteAvarages.push({ hour: i, magnitute: responseData.content[i] });
         }
         console.log(dailyMagnituteAvarages);
         chart_dailyAvarages = await displayDailyMagAvarages(dailyMagnituteAvarages);
@@ -83,7 +86,7 @@
     }
 
     const displayDailyCountAvarages = async (data) => {
-        chart_dailyAvarages?.destroy();
+        chart_dailyCountAvarages?.destroy();
         return new Chart(
             document.getElementById('canvas-chart-counts'),
             {
@@ -131,8 +134,10 @@
             console.error('An error occurred:', error);
         }
         dailyCountAvarages = []
-        for (let i = 0; i < responseData.length; i++) {
-            dailyCountAvarages.push({ hour: i, count: responseData[i] });
+        earthquakesAnalysedCount = responseData.earthquakeCounted;
+
+        for (let i = 0; i < responseData.content.length; i++) {
+            dailyCountAvarages.push({ hour: i, count: responseData.content[i] });
         }
         console.log(dailyCountAvarages);
         chart_dailyCountAvarages = await displayDailyCountAvarages(dailyCountAvarages);

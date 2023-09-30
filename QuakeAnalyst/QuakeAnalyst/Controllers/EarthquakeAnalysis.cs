@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using QuakeAnalyst.Analyzer;
 using QuakeAnalyst.ApiService;
-using QuakeAnalyst.MvcModels;
-using QuakeAnalyst.Repo;
 using System.Reflection;
 
 namespace QuakeAnalyst.Controllers
@@ -26,7 +24,6 @@ namespace QuakeAnalyst.Controllers
             {
                 throw new ArgumentNullException(nameof(filter));
             }
-
             var magnitutes = await _analyzer.MagnituteAvaragesOverDay(filter);
             return Json(magnitutes);
         }

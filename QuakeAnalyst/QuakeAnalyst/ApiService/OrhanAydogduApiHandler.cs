@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using NLog;
-using QuakeAnalyst.MvcModels;
 using QuakeAnalyst.Repo;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
@@ -38,12 +37,28 @@ namespace QuakeAnalyst.ApiService
 
         public async Task<List<Earthquake>> GetEarthquakes(RequestEarthquakeFilter filter)
         {
-            List<Earthquake> earthquakes = await QueryEarthquakeData(filter.FromDay, filter.ToDay);
-            if (earthquakes.Count == 0)
+            List<Earthquake> earthquakes = new();
+            DateTime from = filter.FromDay;
+            DateTime to = filter.ToDay;
+            while(from < to)
+            {
+                DateTime localTo;
+                if(to - from > TimeSpan.FromDays(3))
+                {
+                    localTo = from + TimeSpan.FromDays(3);
+                }
+                else
+                {
+                    localTo = to;
+                }
+                List<Earthquake> query = await QueryEarthquakeData(from, localTo);
+                earthquakes.AddRange(
+                    query.Where(x => x.Magnitude < filter.MaxMagnitute && x.Magnitude > filter.MinMagnitute).ToList()
+                );
+                from = localTo;
+            }
+
                 return earthquakes;
-            if (filter.MaxMagnitute == double.MaxValue && filter.MinMagnitute == 0)
-                return earthquakes;
-            return earthquakes.Where(x => x.Magnitude < filter.MaxMagnitute && x.Magnitude > filter.MinMagnitute).ToList();
         }
         private async Task<bool> QueryGeoLocations()
         {
@@ -73,19 +88,15 @@ namespace QuakeAnalyst.ApiService
            
         }
 
-        private string EarthquakeQueryString(DateTime fromDate, DateTime toDate, int minMag = 4, int limit = int.MaxValue)
+        private string EarthquakeQueryString(DateTime fromDate, DateTime toDate, int minMag = 4, int limit = 900)
         {
 
             return $"https://api.orhanaydogdu.com.tr/deprem/kandilli/archive?skip={minMag}&limit={limit}&date={fromDate.Year}-{fromDate.Month:D2}-{fromDate.Day:D2}&date_end={toDate.Year}-{toDate.Month:D2}-{toDate.Day:D2}";
         }
-        private async Task<List<Earthquake>> QueryEarthquakeData(DateTime? fromDate, DateTime? toDate)
+        private async Task<List<Earthquake>> QueryEarthquakeData(DateTime fromDate, DateTime toDate)
         {
-            if(fromDate == null || toDate == null)
-            {
-                return new List<Earthquake>();
-            }
             HttpClient client = new HttpClient();
-            string query = EarthquakeQueryString((DateTime)fromDate, (DateTime)toDate);
+            string query = EarthquakeQueryString(fromDate, toDate);
             using HttpResponseMessage response = await client.GetAsync(query);
             response.EnsureSuccessStatusCode();
             string responseBody = await response.Content.ReadAsStringAsync();

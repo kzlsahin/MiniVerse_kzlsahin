@@ -1,5 +1,4 @@
-﻿using QuakeAnalyst.MvcModels;
-using QuakeAnalyst.Repo;
+﻿using QuakeAnalyst.Repo;
 
 namespace QuakeAnalyst.ApiService
 {

@@ -3,21 +3,21 @@
 using Newtonsoft.Json;
 using System.Reflection.Metadata;
 
-namespace QuakeAnalyst.MvcModels
+namespace QuakeAnalyst.ApiService
 {
     public class RequestEarthquakeFilter
     {
         [JsonProperty("fromDay")]
-        public DateTime? FromDay { get; set; }
+        public DateTime FromDay { get; set; }
 
         [JsonProperty("toDay")]
-        public DateTime? ToDay { get; set; }
+        public DateTime ToDay { get; set; }
 
         [JsonProperty("minMagnitute")]
-        public double MinMagnitute { get; set; } = 4;
+        public double MinMagnitute { get; set; } = 6;
 
         [JsonProperty("maxMagnitute")]
-        public double MaxMagnitute { get; set; } = double.MaxValue;
+        public double MaxMagnitute { get; set; } = 20;
 
     }
 }

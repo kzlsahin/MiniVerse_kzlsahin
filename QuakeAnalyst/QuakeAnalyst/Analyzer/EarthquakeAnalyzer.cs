@@ -3,8 +3,8 @@
 using Microsoft.AspNetCore.Mvc;
 using QuakeAnalyst.ApiService;
 using QuakeAnalyst.Controllers;
-using QuakeAnalyst.MvcModels;
 using QuakeAnalyst.Repo;
+using System.Text.Json;
 
 namespace QuakeAnalyst.Analyzer
 {
@@ -17,56 +17,48 @@ namespace QuakeAnalyst.Analyzer
             _apiHandler = apiHandler;
             _logger = logger;
         }
-        public async Task<List<double>> MagnituteAvaragesOverDay(RequestEarthquakeFilter filter)
+        public async Task<EarthquakeAnalysisResult> MagnituteAvaragesOverDay(RequestEarthquakeFilter filter)
         {
+            EarthquakeAnalysisResult result = new();
             List<double> magnitutes = new();
-            List<Earthquake>  earthquakes = new();
-            if (filter.FromDay != null && filter.ToDay != null)
+            List<Earthquake> earthquakes = new();
+            earthquakes = await _apiHandler.GetEarthquakes(filter);
+            for (int i = 0; i < 24; i++)
             {
-                earthquakes = await _apiHandler.GetEarthquakes(filter);
-                for (int i = 0; i < 24; i++)
-                {
-                    double magnitute = earthquakes
-                        .Where(x => x.Date.Hour == i)
-                        .Select(x => x.Magnitude)
-                        .DefaultIfEmpty(0)
-                        .Average();
-                    magnitutes.Add(magnitute);
-                }
+                double magnitute = earthquakes
+                    .Where(x => x.Date.Hour == i)
+                    .Select(x => x.Magnitude)
+                    .DefaultIfEmpty(0)
+                    .Average();
+                magnitutes.Add(magnitute);
             }
-            else
-            {
-                for (int i = 0; i < 24; i++)
-                {
-                    magnitutes.Add(0);
-                }
-            }
-            return magnitutes;
+            result.From = filter.FromDay;
+            result.To = filter.ToDay;
+            result.EarthquakeCounted = earthquakes.Count();
+            result.Content = magnitutes;
+            return result;
         }
 
-        public async Task<List<int>> CountAvaragesOverDay(RequestEarthquakeFilter filter)
+        public async Task<EarthquakeAnalysisResult> CountAvaragesOverDay(RequestEarthquakeFilter filter)
         {
-            List<int> counts = new();
+            EarthquakeAnalysisResult result = new();
+            List<double> countAvgs = new();
             List<Earthquake> earthquakes = new();
-            if (filter.FromDay != null && filter.ToDay != null)
+            
+            earthquakes = await _apiHandler.GetEarthquakes(filter);
+            int eartquakeCount = earthquakes.Count();
+            for (int i = 0; i < 24; i++)
             {
-                earthquakes = await _apiHandler.GetEarthquakes(filter);
-                for (int i = 0; i < 24; i++)
-                {
-                    int count = earthquakes
-                        .Where(x => x.Date.Hour == i)
-                        .Count();
-                    counts.Add(count);
-                }
+                int count = earthquakes
+                    .Where(x => x.Date.Hour == i)
+                    .Count();
+                countAvgs.Add((double)count / (double)eartquakeCount);
             }
-            else
-            {
-                for (int i = 0; i < 24; i++)
-                {
-                    counts.Add(0);
-                }
-            }
-            return counts;
+            result.From = filter.FromDay;
+            result.To = filter.ToDay;
+            result.EarthquakeCounted = eartquakeCount;
+            result.Content = countAvgs;
+            return result;
         }
     }
 }
