@@ -1,9 +1,6 @@
-﻿
+﻿using Newtonsoft.Json;
 
-using Newtonsoft.Json;
-using System.Reflection.Metadata;
-
-namespace QuakeAnalyst.ApiService
+namespace ApplicationCore.ApiInterfaces
 {
     public class RequestEarthquakeFilter
     {

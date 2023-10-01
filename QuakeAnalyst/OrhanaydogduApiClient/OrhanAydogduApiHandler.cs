@@ -1,18 +1,20 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ApplicationCore.ApiInterfaces;
+using ApplicationCore.ApiInterfaces;
+using ApplicationCore.Repo;
 using Newtonsoft.Json;
 using ApplicationCore.Repo;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
+using static System.Net.WebRequestMethods;
 
-
-namespace QuakeAnalyst.ApiService
+namespace OrhanaydogduApiHandler
 {
     public class OrhanAydogduApiHandler : IEarthquakeApiService
     {
         string _geoLocationsQueryString = "https://api.orhanaydogdu.com.tr/deprem/statics/cities";
         List<City> _geoLocations = new List<City>();
         DateTime _lastGeoLocationUpdate = DateTime.MinValue;
-        TimeSpan _validUpdateSpan = new TimeSpan(1,0,0,0);
+        TimeSpan _validUpdateSpan = new TimeSpan(1, 0, 0, 0);
         public OrhanAydogduApiHandler()
         {
             QueryGeoLocations();
@@ -22,9 +24,9 @@ namespace QuakeAnalyst.ApiService
             bool res;
             bool isDataAvailable = _geoLocations?.Count > 0;
             bool isDataUpToDate = (DateTime.Now - _lastGeoLocationUpdate) > _validUpdateSpan;
-            if(isDataAvailable && isDataUpToDate)
+            if (isDataAvailable && isDataUpToDate)
             {
-                return _geoLocations ?? new List<City>(); 
+                return _geoLocations ?? new List<City>();
             }
             else
             {
@@ -33,9 +35,29 @@ namespace QuakeAnalyst.ApiService
             return _geoLocations ?? new List<City>();
         }
 
-        public async Task<List<Earthquake>> GetEarthquakes(DateTime fromDate, DateTime toDate)
+        public async Task<List<Earthquake>> GetEarthquakes(RequestEarthquakeFilter filter)
         {
-            List<Earthquake> earthquakes = await QueryEarthquakeData(fromDate, toDate);
+            List<Earthquake> earthquakes = new();
+            DateTime from = filter.FromDay;
+            DateTime to = filter.ToDay;
+            while (from < to)
+            {
+                DateTime localTo;
+                if (to - from > TimeSpan.FromDays(3))
+                {
+                    localTo = from + TimeSpan.FromDays(3);
+                }
+                else
+                {
+                    localTo = to;
+                }
+                List<Earthquake> query = await QueryEarthquakeData(from, localTo);
+                earthquakes.AddRange(
+                    query.Where(x => x.Magnitude < filter.MaxMagnitute && x.Magnitude > filter.MinMagnitute).ToList()
+                );
+                from = localTo;
+            }
+
             return earthquakes;
         }
         private async Task<bool> QueryGeoLocations()
@@ -49,8 +71,7 @@ namespace QuakeAnalyst.ApiService
 
                 QueryResult<List<City>> qResult = JsonConvert.DeserializeObject<QueryResult<List<City>>>(responseBody);
                 if (qResult is null)
-                {                    
-                    _logger.Info($"City list returned empty from the api endpoint. HTTP Request was : {_geoLocationsQueryString}");
+                {
                     return false;
                 }
                 _geoLocations = qResult.result;
@@ -63,12 +84,13 @@ namespace QuakeAnalyst.ApiService
                 Console.WriteLine("Message :{0} ", e.Message);
                 return false;
             }
-           
+
         }
 
-        private string EarthquakeQueryString(DateTime fromDate, DateTime toDate)
+        private string EarthquakeQueryString(DateTime fromDate, DateTime toDate, int minMag = 4, int limit = 900)
         {
-            return $"https://api.orhanaydogdu.com.tr/deprem/kandilli/archive?date={fromDate.Year}-{fromDate.Month:D2}-{fromDate.Day:D2}&date_end={toDate.Year}-{toDate.Month:D2}-{toDate.Day:D2}";
+
+            return $"https://api.orhanaydogdu.com.tr/deprem/kandilli/archive?skip={minMag}&limit={limit}&date={fromDate.Year}-{fromDate.Month:D2}-{fromDate.Day:D2}&date_end={toDate.Year}-{toDate.Month:D2}-{toDate.Day:D2}";
         }
         private async Task<List<Earthquake>> QueryEarthquakeData(DateTime fromDate, DateTime toDate)
         {

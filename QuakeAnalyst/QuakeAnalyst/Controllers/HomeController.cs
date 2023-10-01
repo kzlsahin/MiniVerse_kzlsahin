@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using QuakeAnalyst.ApiService;
+using ApplicationCore.Repo;
+using ApplicationCore.ApiInterfaces;
 using QuakeAnalyst.MvcModels;
 using System.Diagnostics;
 

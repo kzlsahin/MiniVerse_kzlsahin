@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using QuakeAnalyst.Analyzer;
-using QuakeAnalyst.ApiService;
+using ApplicationCore.ApiInterfaces;
 using System.Reflection;
 
 namespace QuakeAnalyst.Controllers

@@ -1,9 +1,9 @@
 ﻿
 
 using Microsoft.AspNetCore.Mvc;
-using QuakeAnalyst.ApiService;
 using QuakeAnalyst.Controllers;
-using QuakeAnalyst.Repo;
+using ApplicationCore.Repo;
+using ApplicationCore.ApiInterfaces;
 using System.Text.Json;
 
 namespace QuakeAnalyst.Analyzer
@@ -44,15 +44,25 @@ namespace QuakeAnalyst.Analyzer
             EarthquakeAnalysisResult result = new();
             List<double> countAvgs = new();
             List<Earthquake> earthquakes = new();
-            
+
             earthquakes = await _apiHandler.GetEarthquakes(filter);
             int eartquakeCount = earthquakes.Count();
+
+
             for (int i = 0; i < 24; i++)
             {
-                int count = earthquakes
-                    .Where(x => x.Date.Hour == i)
-                    .Count();
-                countAvgs.Add((double)count / (double)eartquakeCount);
+                if (eartquakeCount > 0)
+                {
+                    int count = earthquakes
+                        .Where(x => x.Date.Hour == i)
+                        .Count();
+                    countAvgs.Add((double)count / (double)eartquakeCount);
+                }
+                else
+                {
+                    countAvgs.Add(0);
+                }
+
             }
             result.From = filter.FromDay;
             result.To = filter.ToDay;
