@@ -6,6 +6,7 @@ using ApplicationCore.Repo;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using static System.Net.WebRequestMethods;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OrhanaydogduApiHandler
 {
@@ -51,9 +52,10 @@ namespace OrhanaydogduApiHandler
                 {
                     localTo = to;
                 }
-                List<Earthquake> query = await QueryEarthquakeData(from, localTo);
+                string query = EarthquakeQueryString(from, localTo, filter.MinMagnitute, filter.MaxMagnitute);
+                List<Earthquake> responseData = await QueryEarthquakeData(query);
                 earthquakes.AddRange(
-                    query.Where(x => x.Magnitude < filter.MaxMagnitute && x.Magnitude > filter.MinMagnitute).ToList()
+                    responseData.Where(x => x.Magnitude < filter.MaxMagnitute && x.Magnitude > filter.MinMagnitute).ToList()
                 );
                 from = localTo;
             }
@@ -87,15 +89,13 @@ namespace OrhanaydogduApiHandler
 
         }
 
-        private string EarthquakeQueryString(DateTime fromDate, DateTime toDate, int minMag = 4, int limit = 900)
+        private string EarthquakeQueryString(DateTime fromDate, DateTime toDate, double minMag = 4, double limit = 900)
         {
 
             return $"https://api.orhanaydogdu.com.tr/deprem/kandilli/archive?skip={minMag}&limit={limit}&date={fromDate.Year}-{fromDate.Month:D2}-{fromDate.Day:D2}&date_end={toDate.Year}-{toDate.Month:D2}-{toDate.Day:D2}";
         }
-        private async Task<List<Earthquake>> QueryEarthquakeData(DateTime fromDate, DateTime toDate)
-        {
-            HttpClient client = new HttpClient();
-            string query = EarthquakeQueryString(fromDate, toDate);
+        private async Task<List<Earthquake>> QueryEarthquakeData(string query)        {
+            HttpClient client = new HttpClient();            
             using HttpResponseMessage response = await client.GetAsync(query);
             response.EnsureSuccessStatusCode();
             string responseBody = await response.Content.ReadAsStringAsync();

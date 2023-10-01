@@ -11,7 +11,7 @@ namespace ApplicationCore.ApiInterfaces
         public DateTime ToDay { get; set; }
 
         [JsonProperty("minMagnitute")]
-        public double MinMagnitute { get; set; } = 6;
+        public double MinMagnitute { get; set; } = 4;
 
         [JsonProperty("maxMagnitute")]
         public double MaxMagnitute { get; set; } = 20;
